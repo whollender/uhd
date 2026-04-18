@@ -27,7 +27,14 @@ module duc_chain
    input [31:0] sample,
    input run,
    output strobe,
-   output [31:0] debug
+   output [31:0] debug,
+
+   // sweep gen
+   input enable_sweep,
+   input triangle_sweep,
+   input [31:0] start_phase_inc,
+   input [31:0] stop_phase_inc,
+   input [31:0] sweep_step
    );
 
    genvar 	 i;
@@ -75,6 +82,24 @@ module duc_chain
    always @(posedge clk) strobe_hb2 <= strobe_hb2_pre;
    always @(posedge clk) strobe_cic <= strobe_cic_pre;
 
+   reg [31:0] phase_incr_sweep;
+   reg pos_sweep;
+   always @(posedge clk)
+      if(rst)
+	 phase_incr_sweep <= 0;
+	 pos_sweep <= 1;
+      else if(~run)
+	 phase_incr_sweep <= start_phase_incr;
+	 pos_sweep <= 1;
+      else
+	 if(phase_incr_sweep >= stop_phase_incr)
+	    phase_incr_sweep <= start_phase_incr;
+	 else
+	    phase_incr_sweep <= phase_incr_sweep + sweep_step
+   
+   // Sweep counter uses -Fs/2 -> Fs/2 range, but needs converted to 0 -> Fs range by inverting MSB
+   wire [31:0] phase_incr_nco = sweep_enable ? {~phase_incr_sweep[31], phase_incr_sweep[30:0]} : phase_incr;
+   
    // NCO
    always @(posedge clk)
      if(rst)
@@ -82,7 +107,7 @@ module duc_chain
      else if(~run)
        phase <= 0;
      else
-       phase <= phase + phase_inc;
+       phase <= phase + phase_inc_nco;
 
    wire        signed [17:0] da, db;
    wire        signed [35:0] prod_i, prod_q;

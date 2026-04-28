@@ -15,21 +15,44 @@ module sweep_gen
    wire [31:0] stop_shift = {~stop_phase_incr[31], stop_phase_incr[30:0]};
 
    reg [31:0] phase_incr_sweep;
-   reg pos_sweep;
+   reg neg_sweep;
+	reg counter_rst;
+	
+	always @(posedge clk)
+	if (rst) begin
+		neg_sweep <= 1'b0;
+		counter_rst <= 1'b1;
+	end else if (~run) begin
+		neg_sweep <= 1'b0;
+		counter_rst <= 1'b1;
+	end else if (phase_incr_sweep < start_shift) begin
+		neg_sweep <= 1'b0;
+		counter_rst <= 1'b0;
+	end else if (phase_incr_sweep >= stop_shift) begin
+		if (triangle_sweep) begin
+			neg_sweep <= 1'b1;
+			counter_rst <= 1'b0;
+		end else begin
+			neg_sweep <= 1'b0;
+			counter_rst <= 1'b1;
+		end
+	end else begin
+		neg_sweep <= neg_sweep;
+		counter_rst <= 1'b0;
+	end
+	
    always @(posedge clk)
       if(rst) begin
-	 phase_incr_sweep <= 0;
-	 pos_sweep <= 1'b1;
-      end else if(~run) begin
-	 phase_incr_sweep <= start_shift;
-	 pos_sweep <= 1'b1;
+			phase_incr_sweep <= 0;
+      end else if(counter_rst) begin
+			phase_incr_sweep <= start_shift;
       end else begin
-	 if(phase_incr_sweep >= stop_shift) begin
-	    phase_incr_sweep <= start_shift;
-	 end else begin
-	    phase_incr_sweep <= phase_incr_sweep + sweep_step;
-		 end
-		 end
+			if (neg_sweep) begin
+				phase_incr_sweep <= phase_incr_sweep - sweep_step;
+			end else begin
+				phase_incr_sweep <= phase_incr_sweep + sweep_step;
+			end
+		end
 
 // Invert MSB to shift from -Fs/2 -> Fs/2 to 0 -> Fs
 assign phase_incr = {~phase_incr_sweep[31], phase_incr_sweep[30:0]};

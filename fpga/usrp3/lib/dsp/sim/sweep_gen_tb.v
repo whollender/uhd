@@ -10,6 +10,15 @@ module sweep_gen_tb();
    reg [31:0] stop_phase_incr;
    reg [31:0] sweep_step;
    wire [31:0] phase_incr_sweep;
+	integer f;
+	
+	initial begin
+		f = $fopen("output.txt","w");
+	end
+	
+	always @(posedge clk) begin
+		$fwrite(f,"%0t,0x%X\n",$realtime,phase_incr_sweep);
+	end
 
    sweep_gen sweep_gen(.clk(clk), .rst(reset),
    .run(run),
@@ -51,7 +60,19 @@ module sweep_gen_tb();
 	run <= 1'b1;
 	repeat(100) @(posedge clk);
 
+	repeat(10000) @(posedge clk);
+	run <= 1'b0;
+	repeat(10) @(posedge clk);
+	triangle_sweep <= 1'b1;
+	repeat(10) @(posedge clk);
+	run <= 1'b1;
+	repeat(10000) @(posedge clk);
+	run <= 1'b0;
+	sweep_step <= 32'h00020000;
+	repeat(10) @(posedge clk);
+	run <= 1'b1;
 	repeat(100000) @(posedge clk);
+	$fclose(f);
 	$finish();
 
      end // initial begin

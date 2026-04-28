@@ -165,6 +165,7 @@ module radio_legacy
       .debug(debug_radio_ctrl_proc));
 
    reg [63:0]     rb_data_user;
+	wire [31:0] sweep_control, sweep_start, sweep_stop, sweep_step;
 generate
    if (USER_SETTINGS == 1) begin
       wire           set_stb_user;
@@ -197,25 +198,37 @@ generate
       // regs->poke32(0, 0xCAFE);
       // regs->poke32(4, 0xBEEF);
       // std::cout << boost::format("0x%016X") % regs->peek64(0) << std::endl;
-      wire [31:0] user_reg_0_value, user_reg_1_value;
 
       setting_reg #(.my_addr(8'd0), .awidth(8), .width(32)) user_reg_0
         (.clk(radio_clk), .rst(radio_rst), .strobe(set_stb_user), .addr(set_addr_user), .in(set_data_user),
-         .out(user_reg_0_value), .changed());
+         .out(sweep_control), .changed());
 
       setting_reg #(.my_addr(8'd1), .awidth(8), .width(32)) user_reg_1
         (.clk(radio_clk), .rst(radio_rst), .strobe(set_stb_user), .addr(set_addr_user), .in(set_data_user),
-         .out(user_reg_1_value), .changed());
+         .out(sweep_start), .changed());
+		
+		setting_reg #(.my_addr(8'd2), .awidth(8), .width(32)) user_reg_2
+        (.clk(radio_clk), .rst(radio_rst), .strobe(set_stb_user), .addr(set_addr_user), .in(set_data_user),
+         .out(sweep_stop), .changed());
+		
+		setting_reg #(.my_addr(8'd3), .awidth(8), .width(32)) user_reg_3
+        (.clk(radio_clk), .rst(radio_rst), .strobe(set_stb_user), .addr(set_addr_user), .in(set_data_user),
+         .out(sweep_step), .changed());
 
       always @* begin
          case(rb_addr_user)
-            8'd0 : rb_data_user <= {user_reg_1_value, user_reg_0_value};
+            8'd0 : rb_data_user <= {sweep_start, sweep_control};
+            8'd1 : rb_data_user <= {sweep_step, sweep_stop};
             default : rb_data_user <= 64'd0;
          endcase
       end
 
    end else begin    //for USER_SETTINGS == 1
       always @* rb_data_user <= 64'd0;
+		assign sweep_control = 32'b0;
+		assign sweep_start = 32'b0;
+		assign sweep_stop = 32'b0;
+		assign sweep_step = 32'b0;
    end
 endgenerate
 
@@ -391,7 +404,12 @@ endgenerate
       .set_stb(set_stb),.set_addr(set_addr),.set_data(set_data),
       .tx_fe_i(tx_fe_i),.tx_fe_q(tx_fe_q),
       .sample(sample_tx), .run(run_tx), .strobe(strobe_tx),
-      .debug(debug_duc_chain) );
+      .debug(debug_duc_chain),
+		.enable_sweep(sweep_control[0]),
+		.triangle_sweep(sweep_control[1]),
+		.sweep_start(sweep_start),
+		.sweep_stop(sweep_stop),
+		.sweep_step(sweep_step));
 
 `ifdef DELETE_FORMAT_CONVERSION
    assign 	     tx_tdata_i = tx_tdata_r;

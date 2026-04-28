@@ -11,12 +11,14 @@ module sweep_gen
    output [31:0] phase_incr
    );
 
-   wire [31:0] start_shift = {~start_phase_incr[31], start_phase_incr[30:0]};
-   wire [31:0] stop_shift = {~stop_phase_incr[31], stop_phase_incr[30:0]};
+   wire [31:0] start_shift;
+   wire [31:0] stop_shift;
+	assign start_shift = {~start_phase_incr[31], start_phase_incr[30:0]};
+   assign stop_shift = {~stop_phase_incr[31], stop_phase_incr[30:0]};
 
    reg [31:0] phase_incr_sweep;
-   reg neg_sweep;
-	reg counter_rst;
+   reg neg_sweep = 1'b0;
+	reg counter_rst = 1'b1;
 	
 	always @(posedge clk)
 	if (rst) begin

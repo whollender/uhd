@@ -32,8 +32,8 @@ module duc_chain
    // sweep gen
    input enable_sweep,
    input triangle_sweep,
-   input [31:0] start_phase_inc,
-   input [31:0] stop_phase_inc,
+   input [31:0] sweep_start,
+   input [31:0] sweep_stop,
    input [31:0] sweep_step
    );
 
@@ -83,14 +83,17 @@ module duc_chain
    always @(posedge clk) strobe_cic <= strobe_cic_pre;
 
    wire [31:0] phase_incr_sweep;
-   sweep_gen sweep_gen(.clk(clk),.rst(rst),.run(run),
+	wire sweep_run;
+	assign sweep_run = enable_sweep & run;
+   sweep_gen sweep_gen(.clk(clk),.rst(rst),.run(sweep_run),
    .triangle_sweep(triangle_sweep),
-   .start_phase_inc(start_phase_incr),
-   .stop_phase_inc(stop_phase_incr),
+   .start_phase_incr(sweep_start),
+   .stop_phase_incr(sweep_stop),
    .sweep_step(sweep_step),
    .phase_incr(phase_incr_sweep));
 
-   wire [31:0] phase_incr_nco = enable_sweep ? phase_incr_sweep : phase_inc;
+   wire [31:0] phase_incr_nco;
+   assign phase_incr_nco = enable_sweep ? phase_incr_sweep : phase_inc;
    
    // NCO
    always @(posedge clk)

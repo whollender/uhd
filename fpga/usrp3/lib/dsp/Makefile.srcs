@@ -41,10 +41,11 @@ sign_extend.v \
 small_hb_dec.v \
 small_hb_int.v \
 srl.v \
+sweep_gen.v \
 tx_frontend.v \
 variable_delay_line.v \
 axi_fir_multisample_filter.sv \
-complex_multiply.sv \
+complex_multiply.v \
 complex_multiply_iq.sv \
 complex_multiply_stb.sv \
 timed_complex_gain_regs.svh \

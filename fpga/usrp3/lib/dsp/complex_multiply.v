@@ -23,26 +23,26 @@
 //
 
 module complex_multiply #(
-  int WIDTH_A = 25,
-  int WIDTH_B = 18,
+  parameter WIDTH_A = 25,
+  parameter WIDTH_B = 18,
   localparam WIDTH_OUT = WIDTH_A + WIDTH_B + 1
 )(
-  input  logic clk,
-  input  logic enable,
+  input  clk,
+  input  enable,
 
-  input  logic signed [WIDTH_A-1 : 0] a_real,
-  input  logic signed [WIDTH_A-1 : 0] a_imag,
-  input  logic signed [WIDTH_B-1 : 0] b_real,
-  input  logic signed [WIDTH_B-1 : 0] b_imag,
+  input  signed [WIDTH_A-1 : 0] a_real,
+  input  signed [WIDTH_A-1 : 0] a_imag,
+  input  signed [WIDTH_B-1 : 0] b_real,
+  input  signed [WIDTH_B-1 : 0] b_imag,
 
-  output logic signed [WIDTH_OUT-1 : 0] out_real,
-  output logic signed [WIDTH_OUT-1 : 0] out_imag
+  output reg signed [WIDTH_OUT-1 : 0] out_real,
+  output reg signed [WIDTH_OUT-1 : 0] out_imag
 );
 
   // try to reuse the registers from DSP48 block of the Xilinx FPGA
-  logic signed [WIDTH_A-1:0] a_real_reg, a_imag_reg, a2_imag_reg;
-  logic signed [WIDTH_B-1:0] b_real_reg, b_imag_reg, b2_real_reg, b2_imag_reg;
-  logic signed [WIDTH_OUT-1:0] mult_real_1, mult_real_2,
+  reg signed [WIDTH_A-1:0] a_real_reg, a_imag_reg, a2_imag_reg;
+  reg signed [WIDTH_B-1:0] b_real_reg, b_imag_reg, b2_real_reg, b2_imag_reg;
+  reg signed [WIDTH_OUT-1:0] mult_real_1, mult_real_2,
     mult_imag_1, mult_imag_2, mult_real_1_d, mult_imag_1_d;
 
   // check widths to comply with the Xilinx DSP48 block
@@ -52,7 +52,7 @@ module complex_multiply #(
     $error("Input width B exceeds 18 bits, which is the maximum for DSP48.");
 
   // calculate (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (enable) begin
       // cycle 1 - register the inputs
       a_real_reg <= a_real;

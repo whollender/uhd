@@ -462,7 +462,7 @@ endgenerate
 	
 	// Add complex multiply for FMCW processing
 	wire [32:0] mult_out_i, mult_out_q;
-	complex_multiply #(.WIDTH_A(16), .WIDTH_B(16)) complex_multiply (
+	complex_multiply_conj #(.WIDTH_A(16), .WIDTH_B(16)) complex_multiply (
 		.clk(radio_clk), .enable(run_rx), .a_real(tx[31:16]), .a_imag(tx[15:0]),
 		.b_real(rx[31:16]), .b_imag(rx[15:0]), .out_real(mult_out_i), .out_imag(mult_out_q));
 	wire [31:0] rx_mult = {mult_out_i[32:17],mult_out_q[32:17]};

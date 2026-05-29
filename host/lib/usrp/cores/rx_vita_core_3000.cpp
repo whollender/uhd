@@ -88,7 +88,7 @@ struct rx_vita_core_3000_impl : rx_vita_core_3000
                     << "Ignoring stream command for finite acquisition of zero samples";
                 return;
             }
-            if (stream_cmd.num_samps > 0x0fffffff) {
+            if (stream_cmd.num_samps > 0x07ffffff) {
                 throw uhd::assertion_error(
                     "Invalid stream command: num_samps exceeds maximum value! "
                     "(Note: Chain multiple commands to request larger bursts)");
@@ -118,6 +118,7 @@ struct rx_vita_core_3000_impl : rx_vita_core_3000
         cmd_word |= uint32_t((inst_chain) ? 1 : 0) << 30;
         cmd_word |= uint32_t((inst_reload) ? 1 : 0) << 29;
         cmd_word |= uint32_t((inst_stop) ? 1 : 0) << 28;
+        cmd_word |= uint32_t((stream_cmd.trigger == stream_cmd_t::trigger_t::TX_RUNNING) ? 1 : 0) << 27;
         cmd_word |= (inst_samps) ? stream_cmd.num_samps : ((inst_stop) ? 0 : 1);
 
         _continuous_streaming = stream_cmd.stream_mode

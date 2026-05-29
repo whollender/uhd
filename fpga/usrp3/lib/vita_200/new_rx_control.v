@@ -27,15 +27,16 @@ module new_rx_control
 
     output [63:0] err_tdata, output err_tlast, output err_tvalid, input err_tready,
     output reg [3:0] ibs_state,
-    output [31:0] debug
+    output [31:0] debug,
+	 input tx_trig
     );
 
    wire [31:0] 	  command_i;
    wire [63:0] 	  time_i;
    wire 	  store_command;
 
-   wire 	  send_imm, chain, reload, stop;
-   wire [27:0] 	  numlines;
+   wire 	  send_imm, chain, reload, stop, use_tx_trig;
+   wire [26:0] 	  numlines;
    wire [63:0] 	  rcvtime;
 
    wire 	  now, early, late;
@@ -81,7 +82,7 @@ module new_rx_control
    axi_fifo_short #(.WIDTH(96)) commandfifo
      (.clk(clk),.reset(reset),.clear(clear | clear_halt),
       .i_tdata({command_i,time_i}), .i_tvalid(store_command), .i_tready(),
-      .o_tdata({send_imm,chain,reload,stop,numlines,rcvtime}),
+      .o_tdata({send_imm,chain,reload,stop,use_tx_trig,numlines,rcvtime}),
       .o_tvalid(command_valid), .o_tready(command_ready),
       .occupied(), .space() );
 
@@ -109,6 +110,9 @@ module new_rx_control
    localparam IBS_ZERO_DATA    = 13;
    
    reg [27:0] 	  lines_left, repeat_lines;
+	
+	// Helper that's only true when we want to use the tx trig and the tx trig is asserted
+	wire tx_trig_now = use_tx_trig & tx_trig;
 
    
    always @(posedge clk)
@@ -131,7 +135,7 @@ module new_rx_control
 	     end else if (late & ~send_imm) begin
 		// Got this command later than its execution time.
 		ibs_state <= IBS_LATECMD;
-	     end else if (now | send_imm) begin
+	     end else if (now | send_imm | tx_trig_now) begin
 		// Either its time to run this command or it should run immediately without a time.
 		ibs_state <= IBS_RUNNING;
 		lines_left <= numlines;
@@ -204,7 +208,7 @@ module new_rx_control
 
    always @*
      case(ibs_state)
-       IBS_IDLE    : command_ready <= stop | late | now | send_imm;
+       IBS_IDLE    : command_ready <= stop | late | now | send_imm | tx_trig_now;
        IBS_RUNNING : command_ready <= strobe & (lines_left == 1) & chain_sav;
        default     : command_ready <= 1'b0;
      endcase // case (ibs_state)

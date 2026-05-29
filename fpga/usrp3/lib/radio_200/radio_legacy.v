@@ -366,10 +366,13 @@ endgenerate
    wire [23:0] tx_fe_i, tx_fe_q;
 
    wire [31:0] debug_tx_control;
+	
+	reg run_tx_pipe = 0;
 
    always @(posedge radio_clk) begin
       tx[31:16] <= (run_tx) ? tx_fe_i[23:8] : tx_idle[31:16];
       tx[15:0]  <= (run_tx) ? tx_fe_q[23:8] : tx_idle[15:0];
+		run_tx_pipe <= run_tx;
    end
 
    wire [63:0] tx_tdata_i; wire tx_tlast_i, tx_tvalid_i, tx_tready_i;
@@ -448,6 +451,9 @@ endgenerate
       .debug(debug_rx_framer));
 
    wire [31:0]       debug_rx_control;
+	
+	// Tx trig strobe on run tx edge
+	wire tx_trig = run_tx & ~run_tx_pipe;
    new_rx_control #(.BASE(SR_RX_CTRL)) new_rx_control
      (.clk(radio_clk), .reset(radio_rst), .clear(1'b0),
       .set_stb(set_stb), .set_addr(set_addr), .set_data(set_data),
@@ -456,7 +462,8 @@ endgenerate
       .sid(rx_sid), .seqnum(rx_seqnum),
       .err_tdata(rx_err_tdata_r), .err_tlast(rx_err_tlast_r), .err_tvalid(rx_err_tvalid_r), .err_tready(rx_err_gate & rx_err_tready_r),
       .ibs_state(ibs_state),
-      .debug(debug_rx_control));
+      .debug(debug_rx_control),
+		.tx_trig(tx_trig));
 
    wire [31:0] 	     debug_ddc_chain;
 	

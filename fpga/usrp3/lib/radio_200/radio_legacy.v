@@ -475,7 +475,8 @@ endgenerate
 	wire [31:0] rx_mult = {mult_out_i[32:17],mult_out_q[32:17]};
 
    // Digital Loopback TX -> RX (Pipeline immediately inside rx_frontend).
-   wire [31:0] 	     rx_fe = loopback ? tx : 
+	wire loopback_enabled = loopback | sweep_control[3];
+   wire [31:0] 	     rx_fe = loopback_enabled ? tx : 
 	                            (sweep_control[2] ? rx_mult : rx);
 
    ddc_chain #(.BASE(SR_RX_DSP), .DSPNO(0), .WIDTH(24), .NEW_HB_DECIM(NEW_HB_DECIM), .DEVICE(DEVICE)) ddc_chain

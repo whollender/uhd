@@ -333,6 +333,8 @@ module b200_core
    wire [63:0] radio1_debug;
    wire [31:0] fe1_gpio_out32;
    assign fe1_gpio_out = fe1_gpio_out32[7:0];
+	
+	assign ch1_tx = tx1;
 
    radio_legacy #(
       .RADIO_FIFO_SIZE(RADIO_FIFO_SIZE),

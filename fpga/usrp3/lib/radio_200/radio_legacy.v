@@ -475,7 +475,7 @@ endgenerate
 	wire [32:0] mult_out_i, mult_out_q;
 	wire [31:0] mult_tx_in = sweep_control[4] ? other_chan_tx : tx;
 	complex_multiply_conj #(.WIDTH_A(16), .WIDTH_B(16)) complex_multiply (
-		.clk(radio_clk), .enable(run_rx), .a_real(tx[31:16]), .a_imag(tx[15:0]),
+		.clk(radio_clk), .enable(run_rx), .a_real(mult_tx_in[31:16]), .a_imag(mult_tx_in[15:0]),
 		.b_real(rx[31:16]), .b_imag(rx[15:0]), .out_real(mult_out_i), .out_imag(mult_out_q));
 	wire [31:0] rx_mult = {mult_out_i[32:17],mult_out_q[32:17]};
 

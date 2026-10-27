@@ -33,7 +33,10 @@ module radio_legacy
 
    output reg [63:0] vita_time_b,
 
-   output [63:0] debug
+   output [63:0] debug,
+	output tx_trig,
+	input [31:0] other_chan_tx,
+	input other_chan_tx_trig
    );
 
 
@@ -453,7 +456,8 @@ endgenerate
    wire [31:0]       debug_rx_control;
 	
 	// Tx trig strobe on run tx edge
-	wire tx_trig = run_tx & ~run_tx_pipe;
+	assign tx_trig = run_tx & ~run_tx_pipe;
+	wire tx_trig_in = sweep_control[4] ? other_chan_tx_trig : tx_trig;
    new_rx_control #(.BASE(SR_RX_CTRL)) new_rx_control
      (.clk(radio_clk), .reset(radio_rst), .clear(1'b0),
       .set_stb(set_stb), .set_addr(set_addr), .set_data(set_data),
@@ -463,12 +467,13 @@ endgenerate
       .err_tdata(rx_err_tdata_r), .err_tlast(rx_err_tlast_r), .err_tvalid(rx_err_tvalid_r), .err_tready(rx_err_gate & rx_err_tready_r),
       .ibs_state(ibs_state),
       .debug(debug_rx_control),
-		.tx_trig(tx_trig));
+		.tx_trig(tx_trig_in));
 
    wire [31:0] 	     debug_ddc_chain;
 	
 	// Add complex multiply for FMCW processing
 	wire [32:0] mult_out_i, mult_out_q;
+	wire [31:0] mult_tx_in = sweep_control[4] ? other_chan_tx : tx;
 	complex_multiply_conj #(.WIDTH_A(16), .WIDTH_B(16)) complex_multiply (
 		.clk(radio_clk), .enable(run_rx), .a_real(tx[31:16]), .a_imag(tx[15:0]),
 		.b_real(rx[31:16]), .b_imag(rx[15:0]), .out_real(mult_out_i), .out_imag(mult_out_q));

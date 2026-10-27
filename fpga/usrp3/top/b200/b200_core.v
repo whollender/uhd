@@ -298,6 +298,9 @@ module b200_core
    wire [63:0] radio0_debug;
    wire [31:0] fe0_gpio_out32;
    assign fe0_gpio_out = fe0_gpio_out32[7:0];
+	wire [31:0] ch1_tx;
+	wire ch1_tx_trig;
+	wire ch0_tx_trig;
 
    radio_legacy #(
       .RADIO_FIFO_SIZE(RADIO_FIFO_SIZE),
@@ -318,7 +321,7 @@ module b200_core
       .rx_tdata(r0_rx_tdata), .rx_tlast(r0_rx_tlast),  .rx_tvalid(r0_rx_tvalid), .rx_tready(r0_rx_tready),
       .ctrl_tdata(r0_ctrl_tdata), .ctrl_tlast(r0_ctrl_tlast),  .ctrl_tvalid(r0_ctrl_tvalid), .ctrl_tready(r0_ctrl_tready),
       .resp_tdata(r0_resp_tdata), .resp_tlast(r0_resp_tlast),  .resp_tvalid(r0_resp_tvalid), .resp_tready(r0_resp_tready),
-      .debug(radio0_debug)
+      .debug(radio0_debug), .tx_trig(ch0_tx_trig), .other_chan_tx(ch1_tx), .other_chan_tx_trig(ch1_tx_trig)
    );
 
     /*******************************************************************
@@ -350,7 +353,7 @@ module b200_core
       .rx_tdata(r1_rx_tdata), .rx_tlast(r1_rx_tlast),  .rx_tvalid(r1_rx_tvalid), .rx_tready(r1_rx_tready),
       .ctrl_tdata(r1_ctrl_tdata), .ctrl_tlast(r1_ctrl_tlast),  .ctrl_tvalid(r1_ctrl_tvalid), .ctrl_tready(r1_ctrl_tready),
       .resp_tdata(r1_resp_tdata), .resp_tlast(r1_resp_tlast),  .resp_tvalid(r1_resp_tvalid), .resp_tready(r1_resp_tready),
-      .debug(radio1_debug)
+      .debug(radio1_debug), .tx_trig(ch1_tx_trig), .other_chan_tx(tx0), .other_chan_tx_trig(ch0_tx_trig)
    );
 `else
     assign radio_st = 8'h1;
@@ -370,6 +373,9 @@ module b200_core
     assign r1_rx_tlast = r1_tx_tlast;
     assign r1_rx_tvalid = r1_tx_tvalid;
     assign r1_tx_tready = r1_tx_tready;
+	 
+	 assign ch1_tx_trig = 1'b0;
+	 assign ch1_tx = 32'b0;
 
 `endif // !`ifdef TARGET_B210
 
